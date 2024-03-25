@@ -27,10 +27,11 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="8dp"
+            android:textStyle="bold"
             tools:text = "1°C"
             android:textColor="@color/white"
             android:textAlignment="center"
-            android:textSize="32sp" />
+            android:textSize="64sp" />
 
         <TextView
             android:id="@+id/textViewTemp"

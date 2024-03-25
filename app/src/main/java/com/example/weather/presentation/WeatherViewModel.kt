@@ -1,6 +1,7 @@
 package com.example.weather.presentation
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -16,6 +17,7 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
 
     suspend fun getInfo(latitude: Double, longitude: Double) {
         val weatherResponse = repository.getWeatherWithCoord(latitude, longitude)
+        Log.d("getInfo", weatherResponse.toString())
         _weatherInfo.value = weatherResponse
     }
 
