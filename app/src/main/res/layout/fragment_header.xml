@@ -27,9 +27,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="8dp"
+            tools:text = "1°C"
             android:textColor="@color/white"
             android:textAlignment="center"
-            android:text="Санкт-Петербург"
             android:textSize="32sp" />
 
         <TextView
@@ -39,7 +39,6 @@
             android:padding="8dp"
             android:textColor="@color/white"
             android:textAlignment="center"
-            android:text="34"
             android:textSize="64sp" />
     </LinearLayout>
 

@@ -2,43 +2,51 @@ package com.example.weather.presentation
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.location.Geocoder
 import android.location.Location
 import android.location.LocationManager
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.example.weather.R
+import com.example.weather.data.network.pojo.Weather
 import com.example.weather.data.network.pojo.WeatherResponse
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.launch
+import java.io.OutputStreamWriter
+import java.net.Socket
+import java.util.Locale
 
 
 class Weather : AppCompatActivity() {
     private lateinit var weatherViewModel: WeatherViewModel
-    private lateinit var weather: WeatherResponse
-    private lateinit var fusedLocationClient: FusedLocationProviderClient
     private var latitude: Double = 0.0
     private var longitude: Double = 0.0
+    private lateinit var geocoder: Geocoder
+
+    private var temp: Double = 0.0
+    private var description: String = ""
+    private var city: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.weather)
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         weatherViewModel = ViewModelProvider(this)[WeatherViewModel::class.java]
+        geocoder = Geocoder(this, Locale.getDefault())
         getLastKnownLocation(this)
-        weatherObserve(latitude, longitude)
-        launchFragments()
 
     }
 
-    private fun launchFragments() {
+    private fun launchFragmentHeader(temp: Double, city: String, description: String) {
+        val fragment = FragmentHeader.newInstance(temp, city, description)
         supportFragmentManager.beginTransaction()
-            .replace(R.id.fragment_container_header, FragmentHeader())
+            .replace(R.id.fragment_container_header, fragment)
             .commit()
     }
 
@@ -48,7 +56,10 @@ class Weather : AppCompatActivity() {
         }
         weatherViewModel.weatherInfo.observe(this) {
             Log.d("Погода", it.toString())
-            weather = it
+            Log.d("Город", city)
+            getArguments(it)
+            launchFragmentHeader(temp, city, description)
+
         }
     }
 
@@ -70,10 +81,19 @@ class Weather : AppCompatActivity() {
             longitude = gps[1]
             Log.e("gpsLat",gps[0].toString())
             Log.e("gpsLong",gps[1].toString())
-
+            weatherObserve(latitude, longitude)
         }
-
     }
+
+
+
+    fun getArguments(weather: WeatherResponse){
+        //TODO city = getCityFromLocation(latitude, longitude, geocoder)
+        temp = weather.main.temp
+        description = weather.weather.last().description
+    }
+
+
 
 
 }

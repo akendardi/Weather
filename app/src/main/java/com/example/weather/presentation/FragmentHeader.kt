@@ -1,32 +1,38 @@
 package com.example.weather.presentation
 
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import com.example.weather.R
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
+private const val EXTRA_TEMP = "temp"
+private const val EXTRA_CITY = "city"
+private const val EXTRA_DESCRIPTION = "description"
 
-/**
- * A simple [Fragment] subclass.
- * Use the [FragmentHeader.newInstance] factory method to
- * create an instance of this fragment.
- */
+
+
+
 class FragmentHeader : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
+    private var temp: Double? = null
+    private var city: String? = null
+    private var description: String? = null
+
+    private lateinit var tv_city: TextView
+    private lateinit var tv_temp: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
+            temp = it.getDouble(EXTRA_TEMP)
+            city = it.getString(EXTRA_CITY)
+            description = it.getString(EXTRA_DESCRIPTION)
+            Log.d("Температура onCreate", temp.toString())
         }
     }
 
@@ -34,27 +40,33 @@ class FragmentHeader : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_header, container, false)
     }
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        initViews()
+        setupData()
+    }
+
+    private fun initViews(){
+        tv_city = view?.findViewById(R.id.textViewTemp)!!
+        tv_temp = view?.findViewById(R.id.textViewCity)!!
+    }
+    private fun setupData(){
+        tv_city.text = city
+        tv_temp.text = temp?.toInt().toString() + "°C"
+    }
+
     companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment FragmentHeader.
-         */
-        // TODO: Rename and change types and number of parameters
         @JvmStatic
-        fun newInstance(temp: Int) =
+        fun newInstance(temp: Double, city: String, description: String) =
             FragmentHeader().apply {
-//                arguments = Bundle().apply {
-//                    putString(ARG_PARAM1, param1)
-//                    putString(ARG_PARAM2, param2)
-//                }
+                arguments = Bundle().apply {
+                    putDouble(EXTRA_TEMP, temp)
+                    putString(EXTRA_CITY, city)
+                    putString(EXTRA_DESCRIPTION, description)
+                }
             }
     }
 }
