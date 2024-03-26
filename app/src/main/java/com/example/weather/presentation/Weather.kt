@@ -7,10 +7,12 @@ import android.content.pm.PackageManager
 import android.location.Geocoder
 import android.location.Location
 import android.location.LocationManager
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -19,8 +21,13 @@ import androidx.lifecycle.lifecycleScope
 import com.example.weather.R
 import com.example.weather.data.network.pojo.WeatherResponse
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.time.LocalTime
+import java.util.Date
 import java.util.Locale
 
+private const val EXTRA_DAY = "day"
+private const val EXTRA_NIGHT = "night"
 
 class Weather : AppCompatActivity() {
     private lateinit var weatherViewModel: WeatherViewModel
@@ -31,8 +38,14 @@ class Weather : AppCompatActivity() {
 
 
     private var temp: Double = 0.0
+    private var maxTemp: Double = 0.0
+    private var minTemp: Double = 0.0
+    private var tempFeel: Double = 0.0
+    private var sunUp: String = ""
+    private var sunDown: String = ""
     private var description: String = ""
     private var city: String = ""
+    private var dayTime: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -102,7 +115,17 @@ class Weather : AppCompatActivity() {
 
 
     private fun launchFragmentHeader(temp: Double, city: String, description: String) {
-        val fragment = FragmentHeader.newInstance(temp, city, description)
+        val fragment = FragmentHeader.newInstance(
+            temp,
+            minTemp,
+            maxTemp,
+            tempFeel,
+            sunUp,
+            sunDown,
+            city,
+            description,
+            dayTime
+        )
         supportFragmentManager.beginTransaction()
             .replace(R.id.fragment_container_header, fragment)
             .commit()
@@ -126,8 +149,8 @@ class Weather : AppCompatActivity() {
             context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
         // Проверяем наличие разрешений на доступ к местоположению
-        if (context.checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION) != android.content.pm.PackageManager.PERMISSION_GRANTED &&
-            context.checkSelfPermission(android.Manifest.permission.ACCESS_COARSE_LOCATION) != android.content.pm.PackageManager.PERMISSION_GRANTED
+        if (context.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+            context.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
         ) {
             Log.e("getLastKnownLocation", "No location permissions")
             return
@@ -150,22 +173,31 @@ class Weather : AppCompatActivity() {
         }
 
         // Ваши дальнейшие действия с полученным местоположением
-        val latitude = location.latitude
-        val longitude = location.longitude
+        latitude = location.latitude
+        longitude = location.longitude
         Log.d("getLastKnownLocation", "Latitude: $latitude, Longitude: $longitude")
         weatherObserve(latitude, longitude)
     }
 
 
-    fun getArguments(weather: WeatherResponse) {
+    private fun getArguments(weather: WeatherResponse) {
         city = getCity()
-        Log.d("Город", city)
         temp = weather.main.temp
+        minTemp = weather.main.temp_min
+        maxTemp = weather.main.temp_max
+        tempFeel = weather.main.feels_like
+        sunUp = getTime(weather.sys.sunrise)
+        sunDown = getTime(weather.sys.sunset)
         description = weather.weather.last().description
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            dayTime()
+        }
+
     }
 
-    fun getCity(): String {
-        val adress = geocoder.getFromLocation(41.810058, 44.722921, 1)
+    private fun getCity(): String {
+        Log.d("Город", latitude.toString())
+        val adress = geocoder.getFromLocation(latitude, longitude, 1)
         Log.d("Город", adress.toString())
         if (adress!![0].locality != null) {
             return adress[0].locality
@@ -173,10 +205,52 @@ class Weather : AppCompatActivity() {
         val country = adress[0].countryName.trim()
         val adressLines = adress[0].getAddressLine(0).split(",").map { it.trim() }
         val countryInd = adressLines.indexOf(country)
-
         Log.d("Город", adressLines.toString())
-        return adressLines[countryInd - 2]
+        if (countryInd > 0) {
+            if (adressLines[countryInd - 1] == adress[0].subAdminArea) {
+                return adress[0].subAdminArea
+            }
+            return if (countryInd >= 3) {
+                adressLines[countryInd - 2]
+            } else {
+                adressLines[0]
+            }
+        }
+        return "Unknown city"
 
+    }
+
+    fun getTime(time: Long): String {
+        val date =
+            Date(time * 1000) // умножаем на 1000, чтобы преобразовать секунды в миллисекунды
+
+        val sdf = SimpleDateFormat("HH:mm")
+
+        val formattedTime: String = sdf.format(date)
+        return formattedTime
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun dayTime() {
+        val hourUp = sunUp.split(":")[0].toInt()
+        val hourDown = sunDown.split(":")[0].toInt()
+        val minuteUp = sunUp.split(":")[1].toInt()
+        val minuteDown = sunDown.split(":")[1].toInt()
+
+        val currentTime = LocalTime.now()
+        val currentHour = currentTime.hour
+        val currentMinute = currentTime.minute
+
+        dayTime = if (currentHour > hourDown || currentHour < hourUp) {
+            EXTRA_NIGHT
+        } else if ((currentHour == hourDown) && (currentMinute > minuteDown)) {
+            EXTRA_NIGHT
+        } else if ((currentHour == hourUp) && (currentMinute < minuteUp)) {
+            EXTRA_NIGHT
+        } else {
+            EXTRA_DAY
+        }
+        Log.d("Говно", dayTime)
     }
 
 
