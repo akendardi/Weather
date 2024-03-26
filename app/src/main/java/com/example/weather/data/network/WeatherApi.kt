@@ -14,4 +14,6 @@ interface WeatherApi {
         @Query("lang") language: String = "ru",
         @Query("units") units: String = "metric"
     ): Call<WeatherResponse> // WeatherResponse - ваш POJO объект для десериализации ответа
+
+
 }

@@ -7,6 +7,7 @@ android {
     namespace = "com.example.weather"
     compileSdk = 34
 
+
     defaultConfig {
         applicationId = "com.example.weather"
         minSdk = 24
