@@ -1,6 +1,7 @@
 package com.example.weather.presentation
 
 import android.app.Application
+import android.location.Geocoder
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
@@ -11,6 +12,9 @@ import com.example.weather.data.network.pojo.WeatherResponse
 class WeatherViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = WeatherRepositoryImpl()
     private val _weatherInfo: MutableLiveData<WeatherResponse> = MutableLiveData()
+
+    private lateinit var geocoder: Geocoder
+    private var permissionToastShown = false
     val weatherInfo: LiveData<WeatherResponse>
         get() = _weatherInfo
 
@@ -20,6 +24,8 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
         Log.d("getInfo", weatherResponse.toString())
         _weatherInfo.value = weatherResponse
     }
+
+
 
 
 }

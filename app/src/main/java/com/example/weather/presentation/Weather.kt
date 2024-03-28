@@ -215,8 +215,12 @@ class Weather : AppCompatActivity() {
             } else {
                 adressLines[0]
             }
+        }else{
+            if (adressLines.size >= 3){
+                return adressLines[adressLines.size-4]
+            }
         }
-        return "Unknown city"
+        return adressLines[0]
 
     }
 
